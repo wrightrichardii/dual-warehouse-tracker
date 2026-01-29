@@ -563,7 +563,7 @@
                             <div className="w-8 flex-shrink-0"></div>
                             {Array(20).fill(null).map((_, i) => (
                                 <div key={i} className="w-14 flex-shrink-0 mx-0.5 text-center text-xs font-bold text-slate-600">
-                                    Row {i + 1}
+                                    {i === 8 ? 'Tool Room' : i >= 9 ? `Row ${i}` : `Row ${i + 1}`}
                                 </div>
                             ))}
                         </div>
