@@ -213,7 +213,7 @@
                             
                             setTimeout(() => {
                                 isUpdatingFromSheet.current = false;
-                            }, 100);
+                            }, 500);
                         }
                     } else {
                         setConnectionStatus('error');
@@ -268,7 +268,7 @@
                 
                 loadFromSheet();
                 
-                syncIntervalRef.current = setInterval(loadFromSheet, 3000);
+                syncIntervalRef.current = setInterval(loadFromSheet, 6000);
                 
                 return () => {
                     if (syncIntervalRef.current) {
