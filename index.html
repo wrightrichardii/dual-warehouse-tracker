@@ -95,9 +95,19 @@
                 const stacks = [];
                 for (let row = 1; row <= 20; row++) {
                     for (let pos = 1; pos <= 10; pos++) {
+                        // Create display name that matches the header labels
+                        let displayName;
+                        if (row === 9) {
+                            displayName = `TR-P${pos}`; // Tool Room
+                        } else if (row >= 10) {
+                            displayName = `R${row - 1}-P${pos}`; // Row 10 becomes R9, Row 11 becomes R10, etc.
+                        } else {
+                            displayName = `R${row}-P${pos}`; // Rows 1-8 stay the same
+                        }
+                        
                         stacks.push({
                             id: `GTR-R${row}-P${pos}`,
-                            name: `R${row}-C${pos}`,
+                            name: displayName,
                             row,
                             pos,
                             layout: 'GTR',
@@ -151,9 +161,105 @@
             const [stacksHeritageLeft, setStacksHeritageLeft] = useState(initHeritageLeft());
             const [stacksHeritageRight, setStacksHeritageRight] = useState(initHeritageRight());
             
+            // Product dropdown list - CUSTOMIZE THIS LIST WITH YOUR PRODUCTS
+            const PRODUCT_LIST = [
+                'RVP50',
+                'RVP50-D-ES',
+                'RVS50',
+                'RVS50-03',
+                'RVL50',
+                'RVL50-03',
+                'RVL50-D-04',
+                'RVSH50',
+                'RVSH50-03',
+                'RVLH50',
+                'RVLH50-03',
+                'RVRL5080-D',
+                'RVS70',
+                'RVS70-03',
+                'RVL70',
+                'RVSH70',
+                'RVLH70',
+                'RVS80',
+                'RVL80',
+                'RVSH80',
+                'RVLH80',
+                'RVM80',
+                'RVPR80-D',
+                'RVS80110-D',
+                'RVHL80110-D',
+                'RVS110',
+                'RVL110',
+                'RVL110-D-04',
+                'RVSH110',
+                'RVLH110',
+                'RVS150',
+                'RVL150',
+                'RVSH150',
+                'RVLH150',
+                'F300-1W',
+                'APW67-1',
+                'APP0607-WH-01',
+                'APP0609-WH-01',
+                'APP1414-WH-01',
+                'CCY-2',
+                'CCY-4',
+                'CCY-6',
+                'FSR-500-W7',
+                'FSR-500-W7-02',
+                'FSR-600-W7',
+                'FSR-600-W7-02',
+                'HS-C00-W7',
+                'HS-C00-W7-02',
+                'FS-300-W1',
+                'FS-3875-A3 (FV-WCDO2-A)',
+                'FS-3800-W8 (HSWF3W)',
+                'FS-3325-W4',
+                'RVS70-4PR',
+                'RVS70-4PF',
+                'RVS70-6PR',
+                'RVS70-6PF',
+                'RVS80-4PR',
+                'RVS80-4PF',
+                'RVS110-4PR',
+                'RVS110-4PF',
+                'FD-300-2W-1/2',
+                'RVP-702-00-01',
+                'RVP-746-00-01',
+                'RVFD50',
+                'RVFD80',
+                'RVFD110',
+                'RVG50-6PR-01',
+                'RVG50-6PF-01',
+                'RVSX50-6PR-01',
+                'RVSX50-6PF-01',
+                'RVL50-6PR-01',
+                'RVL50-6PF-01',
+                'RVS70-6PR-01',
+                'RVS70-6PF-01',
+                'RVL70-6PR-01',
+                'RVL70-6PF-01',
+                'RVS80-6PR-01',
+                'RVS80-6PF-01',
+                'RVL80-6PR',
+                'RVL80-6PF',
+                'RVS110-6PR-01',
+                'RVS110-6PF-01',
+                'RVSC8095110-6PR-01',
+                'RVSC8095110-6PF-01',
+                'RVP-832-BK-01',
+                'RVP-849-BK-01',
+                'RVP-852-BK-01',
+                'RVP-856-BK-01',
+                'RVP-833-WH',
+                'Custom...'  // Keep this as last option to allow custom entry
+            ];
+            
             const [showAddModal, setShowAddModal] = useState(false);
             const [selectedStack, setSelectedStack] = useState(null);
             const [newPalletContent, setNewPalletContent] = useState('');
+            const [selectedProduct, setSelectedProduct] = useState('');
+            const [isCustomProduct, setIsCustomProduct] = useState(false);
             const [selectedPosition, setSelectedPosition] = useState('bottom');
             const [showMoveModal, setShowMoveModal] = useState(false);
             const [palletToMove, setPalletToMove] = useState(null);
@@ -335,6 +441,8 @@
                 
                 setCurrentStacks(updatedStacks);
                 setNewPalletContent('');
+                setSelectedProduct('');
+                setIsCustomProduct(false);
                 setSelectedPosition('bottom');
                 setShowAddModal(false);
                 
@@ -952,18 +1060,46 @@
                                 <div className="space-y-4">
                                     <div>
                                         <label className="block text-sm font-medium text-slate-700 mb-2">
-                                            Pallet Contents
+                                            Select Product
                                         </label>
-                                        <input
-                                            type="text"
-                                            value={newPalletContent}
-                                            onChange={(e) => setNewPalletContent(e.target.value)}
-                                            placeholder="e.g., Electronics - SKU12345"
-                                            className="w-full border border-slate-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                            autoFocus
-                                            onKeyPress={(e) => e.key === 'Enter' && addPallet()}
-                                        />
+                                        <select
+                                            value={selectedProduct}
+                                            onChange={(e) => {
+                                                const value = e.target.value;
+                                                setSelectedProduct(value);
+                                                if (value === 'Custom...') {
+                                                    setIsCustomProduct(true);
+                                                    setNewPalletContent('');
+                                                } else {
+                                                    setIsCustomProduct(false);
+                                                    setNewPalletContent(value);
+                                                }
+                                            }}
+                                            className="w-full border border-slate-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                                        >
+                                            <option value="">-- Select a product --</option>
+                                            {PRODUCT_LIST.map(product => (
+                                                <option key={product} value={product}>{product}</option>
+                                            ))}
+                                        </select>
                                     </div>
+                                    
+                                    {isCustomProduct && (
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 mb-2">
+                                                Custom Product Name
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={newPalletContent}
+                                                onChange={(e) => setNewPalletContent(e.target.value)}
+                                                placeholder="Enter custom product name"
+                                                className="w-full border border-slate-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                autoFocus
+                                                onKeyPress={(e) => e.key === 'Enter' && addPallet()}
+                                            />
+                                        </div>
+                                    )}
                                     
                                     <div>
                                         <label className="block text-sm font-medium text-slate-700 mb-2">
@@ -997,6 +1133,8 @@
                                             onClick={() => {
                                                 setShowAddModal(false);
                                                 setNewPalletContent('');
+                                                setSelectedProduct('');
+                                                setIsCustomProduct(false);
                                                 setSelectedPosition('bottom');
                                             }}
                                             className="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-800 py-2 rounded font-medium transition-colors"
